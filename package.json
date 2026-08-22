@@ -1,0 +1,24 @@
+{
+  "name": "fixmyinfra",
+  "private": true,
+  "version": "0.1.0",
+  "description": "FixMyInfra - Smart Infrastructure Issue Detection, Authenticity Verification and Intelligent Complaint Routing System",
+  "workspaces": [
+    "frontend/apps/*",
+    "frontend/packages/*",
+    "backend/api-gateway",
+    "backend/services/*",
+    "backend/shared-lib"
+  ],
+  "scripts": {
+    "dev:citizen": "npm run dev -w frontend/apps/citizen-portal",
+    "dev:department": "npm run dev -w frontend/apps/department-portal",
+    "dev:admin": "npm run dev -w frontend/apps/admin-dashboard",
+    "dev:gateway": "npm run dev -w backend/api-gateway",
+    "lint": "npm run lint --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@fixmyinfra/shared-lib",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "sequelize": "^6.37.3"
+  }
+}

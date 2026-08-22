@@ -1,0 +1,24 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.0
+pillow==10.4.0
+numpy==1.26.4
+
+# Computer vision / issue detection
+ultralytics==8.2.90          # YOLOv8
+opencv-python-headless==4.10.0.84
+
+# Authenticity + similarity
+open-clip-torch==2.26.1      # CLIP embeddings for duplicate/manipulation checks
+sentence-transformers==3.0.1 # text similarity for duplicate complaint detection
+
+# Priority prediction
+xgboost==2.1.1
+scikit-learn==1.5.1
+
+# Model registry / experiment tracking
+mlflow==2.16.0
+
+# Torch (CPU wheel by default - swap for CUDA wheel in Docker if GPU available)
+torch==2.4.0
