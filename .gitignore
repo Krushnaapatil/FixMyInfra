@@ -29,8 +29,5 @@ mlruns/
 .DS_Store
 Thumbs.db
 
-# Docker
-*.pid
-
 # Uploads (local dev)
 uploads/

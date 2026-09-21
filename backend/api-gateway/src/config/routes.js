@@ -1,6 +1,9 @@
 // Central routing table: gateway path prefix -> upstream microservice.
-// Update ports here if a service's local port changes in docker-compose.yml.
+// Update ports here if a service's local development port changes.
 export const serviceRoutes = [
+  // More specific prefixes must come first: officer assignment is ADMIN-only
+  // while the rest of /api/auth (register, login) stays public.
+  { path: '/api/auth/users', target: 'http://localhost:4001', roles: ['ADMIN'] },
   { path: '/api/auth', target: 'http://localhost:4001', public: true },
   { path: '/api/complaints', target: 'http://localhost:4002', roles: ['CITIZEN', 'OFFICER', 'ADMIN'] },
   { path: '/api/routing', target: 'http://localhost:4003', roles: ['ADMIN'] },

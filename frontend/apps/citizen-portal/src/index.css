@@ -1,3 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	:root {
+		font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+		color: #0f2a2e;
+		background: #f7fafa;
+		font-synthesis: none;
+		text-rendering: optimizeLegibility;
+	}
+
+	body {
+		min-width: 320px;
+		margin: 0;
+		background: #f7fafa;
+	}
+
+	button,
+	a,
+	input,
+	select,
+	textarea {
+		font: inherit;
+	}
+}
+
+@layer components {
+	.portal-card > div {
+		border: 0;
+		border-radius: 1rem;
+		background: #fff;
+		padding: 1.25rem;
+		box-shadow: 0 8px 24px rgba(15, 42, 46, 0.055);
+	}
+
+	.portal-card-mint > div,
+	.portal-card-cta > div {
+		background: #eaf8f4;
+	}
+
+	.portal-card-cta > div {
+		padding: 1.5rem;
+	}
+}

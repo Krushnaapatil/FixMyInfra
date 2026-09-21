@@ -15,6 +15,13 @@
     "dev:department": "npm run dev -w frontend/apps/department-portal",
     "dev:admin": "npm run dev -w frontend/apps/admin-dashboard",
     "dev:gateway": "npm run dev -w backend/api-gateway",
+    "dev:auth": "npm run dev -w backend/services/auth-service",
+    "dev:complaint": "npm run dev -w backend/services/complaint-service",
+    "dev:routing": "npm run dev -w backend/services/routing-service",
+    "dev:users": "npm run dev -w backend/services/user-department-service",
+    "dev:notifications": "npm run dev -w backend/services/notification-service",
+    "dev:reporting": "npm run dev -w backend/services/reporting-service",
+    "dev:verification": "npm run dev -w backend/services/verification-service",
     "lint": "npm run lint --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
   },

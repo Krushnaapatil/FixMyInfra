@@ -20,5 +20,5 @@ scikit-learn==1.5.1
 # Model registry / experiment tracking
 mlflow==2.16.0
 
-# Torch (CPU wheel by default - swap for CUDA wheel in Docker if GPU available)
+# Torch CPU wheel; use the platform-specific CUDA wheel when GPU acceleration is available.
 torch==2.4.0
