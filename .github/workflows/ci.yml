@@ -30,3 +30,15 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: python -c "import app.main"
+
+  prod-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate production compose file
+        run: docker compose -f infra/docker-compose.prod.yml config --quiet
+        env:
+          JWT_SECRET: ci-placeholder-secret
+          # Required by the gateway and every service; compose asserts it is set.
+          INTERNAL_SERVICE_TOKEN: ci-placeholder-internal-service-token
+          POSTGRES_PASSWORD: ci-placeholder-password

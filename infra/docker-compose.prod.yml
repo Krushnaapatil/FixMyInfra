@@ -1,0 +1,170 @@
+# Production stack for the Nashik deployment.
+# Usage:
+#   cp .env.example .env   # then set JWT_SECRET, INTERNAL_SERVICE_TOKEN and passwords
+#   docker compose -f infra/docker-compose.prod.yml up -d --build
+#
+# Only services with real implementations are included. The routing,
+# user-department, notification, reporting and verification scaffolds are
+# intentionally left out until their endpoints land.
+#
+# INTERNAL_SERVICE_TOKEN is mandatory, not optional: the gateway stamps it on
+# every proxied request and each service rejects traffic without it, so a missing
+# value makes the services refuse to start. See SECURITY.md.
+#
+# Fresh databases are initialized from the checked-in SQL migrations via
+# /docker-entrypoint-initdb.d (migrations are order-independent: no
+# cross-service foreign keys). These only run when initializing an empty data
+# directory, so upgrades need the migrations applied by hand.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fixmyinfra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-fixmyinfra}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - fixmyinfra-pgdata:/var/lib/postgresql/data
+      - ../backend/services/auth-service/migrations/001-create-users.sql:/docker-entrypoint-initdb.d/010-auth-users.sql:ro
+      - ../backend/services/complaint-service/migrations/001-create-complaints.sql:/docker-entrypoint-initdb.d/020-complaints.sql:ro
+      - ../backend/services/complaint-service/migrations/002-grant-complaint-access.sql:/docker-entrypoint-initdb.d/021-complaint-grants.sql:ro
+      - ../backend/services/complaint-service/migrations/003-add-complaint-department.sql:/docker-entrypoint-initdb.d/022-complaint-department.sql:ro
+      - ../backend/services/complaint-service/migrations/004-add-complaint-user.sql:/docker-entrypoint-initdb.d/023-complaint-user.sql:ro
+      - ../backend/services/complaint-service/migrations/005-create-outbox-events.sql:/docker-entrypoint-initdb.d/024-outbox-events.sql:ro
+      - ../backend/services/complaint-service/migrations/006-backfill-complaint-departments.sql:/docker-entrypoint-initdb.d/025-backfill-departments.sql:ro
+      - ../backend/services/complaint-service/migrations/007-complete-category-backfill.sql:/docker-entrypoint-initdb.d/026-complete-category-backfill.sql:ro
+      - ../backend/services/complaint-service/migrations/008-normalize-categories.sql:/docker-entrypoint-initdb.d/027-normalize-categories.sql:ro
+      - ../backend/services/complaint-service/migrations/009-scope-image-urls.sql:/docker-entrypoint-initdb.d/028-scope-image-urls.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fixmyinfra} -d ${POSTGRES_DB:-fixmyinfra}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - fixmyinfra-rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ..
+      dockerfile: ai-service/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_DIR: backend/services/auth-service
+        SERVICE_PORT: 4001
+    restart: unless-stopped
+    expose:
+      - "4001"
+    environment:
+      PORT: 4001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fixmyinfra}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fixmyinfra}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  complaint-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_DIR: backend/services/complaint-service
+        SERVICE_PORT: 4002
+    restart: unless-stopped
+    expose:
+      - "4002"
+    environment:
+      PORT: 4002
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fixmyinfra}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fixmyinfra}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_DIR: backend/api-gateway
+        SERVICE_PORT: 4000
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      AUTH_SERVICE_URL: http://auth-service:4001
+      COMPLAINT_SERVICE_URL: http://complaint-service:4002
+      AI_SERVICE_URL: http://ai-service:8000
+    depends_on:
+      - auth-service
+      - complaint-service
+
+  citizen-portal:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args:
+        APP: citizen-portal
+    restart: unless-stopped
+    ports:
+      - "${CITIZEN_PORT:-5173}:80"
+    depends_on:
+      - api-gateway
+
+  department-portal:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args:
+        APP: department-portal
+    restart: unless-stopped
+    ports:
+      - "${DEPARTMENT_PORT:-5174}:80"
+    depends_on:
+      - api-gateway
+
+  admin-dashboard:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args:
+        APP: admin-dashboard
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-5175}:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  fixmyinfra-pgdata:
+  fixmyinfra-rabbitdata:
