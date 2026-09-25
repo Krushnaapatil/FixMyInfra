@@ -26,6 +26,9 @@ docs/FixMyInfra_SAD.md                                                architectu
 
 ## Quick start
 
+Local development runs entirely on `localhost` — plain Node.js, Python and
+PostgreSQL processes. Docker is not required at any point.
+
 ### 1. Local prerequisites
 
 Install and run PostgreSQL and RabbitMQ directly on the development machine.
@@ -39,21 +42,24 @@ PostgreSQL: localhost:5432
 RabbitMQ:   localhost:5672
 ```
 
-Development runs as ordinary local Node.js and Python processes.
-
-Alternatively, start the dependencies with Docker instead of installing them directly:
-
-```bash
-docker compose -f infra/docker-compose.yml up -d
-```
+On Windows, RabbitMQ has no native build — install
+[Erlang/OTP](https://www.erlang.org/downloads) then
+[RabbitMQ](https://www.rabbitmq.com/install-windows.html), or run the broker in
+a WSL distro. Without a broker the application still starts: complaint-service
+logs that the outbox is disabled and persists complaints without emitting
+events, and picks them up once a broker is available.
 
 Apply the SQL migrations in order as the database owner (the `fixmyinfra`
 role has no `CREATE` privilege, so `psql -U postgres` or equivalent is required):
 
 ```bash
 # auth-service: backend/services/auth-service/migrations/001-create-users.sql
-# complaint-service: backend/services/complaint-service/migrations/001-*.sql … 005-*.sql
+# complaint-service: backend/services/complaint-service/migrations/001-*.sql … 009-*.sql
 ```
+
+Migrations are idempotent and `RAISE NOTICE` anything they could not resolve on
+their own (unroutable complaints, evidence URLs outside `/api/media`) instead of
+guessing.
 
 ### 2. Install workspace dependencies
 
@@ -61,7 +67,26 @@ role has no `CREATE` privilege, so `psql -U postgres` or equivalent is required)
 npm install
 ```
 
-### 3. Start the backend locally
+### 3. Configure secrets
+
+Each service and the gateway needs its own `.env`. Copy the templates and
+generate real values — the same value must be used for a given secret across the
+gateway and every service:
+
+```bash
+cp backend/api-gateway/.env.example backend/api-gateway/.env
+for s in backend/services/*/; do cp "$s/.env.example" "$s/.env"; done
+
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"   # JWT_SECRET
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"   # INTERNAL_SERVICE_TOKEN
+```
+
+The gateway and every service refuse to start if `INTERNAL_SERVICE_TOKEN` is
+missing, still a placeholder, or shorter than 32 characters. That secret is what
+stops anyone reaching a service port directly and forging the `X-User-*` identity
+headers — see [SECURITY.md](SECURITY.md).
+
+### 4. Start the backend locally
 
 ```bash
 npm run dev:gateway
@@ -73,14 +98,15 @@ same pattern:
 
 ```bash
 cd backend/services/complaint-service
-cp .env.example .env
 npm run dev
 ```
 
 The gateway listens on `http://localhost:4000`. Start the services required by
-the workflow you are developing; service ports are documented in each `.env.example`.
+the workflow you are developing; service ports are documented in each
+`.env.example`. Services accept only traffic carrying the gateway's
+`INTERNAL_SERVICE_TOKEN`, so the service ports are not an open door.
 
-### 4. Start a frontend locally
+### 5. Start a frontend locally
 
 From the repository root, run the portal you need:
 
@@ -90,7 +116,7 @@ npm run dev:department  # http://localhost:5174
 npm run dev:admin       # http://localhost:5175
 ```
 
-### 5. AI service, running locally
+### 6. AI service, running locally
 
 ```bash
 cd ai-service
@@ -99,8 +125,20 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-## Next steps (Sprint 0)
+## Production deployment (Nashik)
 
+Container images are provided for deployment only. Local development does not
+use them.
+
+```bash
+cp .env.example .env   # set JWT_SECRET, INTERNAL_SERVICE_TOKEN, POSTGRES_PASSWORD, CORS_ORIGIN
+docker compose -f infra/docker-compose.prod.yml up -d --build
+```
+
+Full runbook (first admin account, upgrades, hardening checklist): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Security posture and accepted risks: [SECURITY.md](SECURITY.md).
+
+## Next steps (Sprint 0)
 1. Finalize the OpenAPI contract for every gateway route in `backend/api-gateway/src/config/routes.js`.
 2. Generate `frontend/packages/types` from that OpenAPI spec.
 3. Set up MSW or json-server mocks so frontend devs are never blocked on real endpoints.

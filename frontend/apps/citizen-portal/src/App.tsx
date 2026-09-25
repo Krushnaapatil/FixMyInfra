@@ -4,6 +4,9 @@ import TrackComplaintsPage from './pages/TrackComplaintsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import HomePage from './pages/HomePage';
+import NotificationsPage from './pages/NotificationsPage';
+import ProfilePage from './pages/ProfilePage';
+import SupportPage from './pages/SupportPage';
 import { RequireAuth } from './components/RequireAuth';
 
 export default function App() {
@@ -14,6 +17,9 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
+      <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
+      <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+      <Route path="/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
     </Routes>
   );
 }

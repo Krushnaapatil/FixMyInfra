@@ -27,11 +27,25 @@ router.get('/', (_req, res) => {
   res.json({ service: 'auth-service', status: 'ok' });
 });
 
+// Lists all users. Reached via the gateway's ADMIN-only /api/auth/users
+// prefix (rewritten to /users); the header check is defense-in-depth.
+router.get('/users', async (_req, res) => {
+  if (_req.header('X-User-Role') !== 'ADMIN') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  try {
+    const users = await User.findAll({ order: [['createdAt', 'DESC']] });
+    return res.json({ users: users.map(serializeUser) });
+  } catch (error) {
+    console.error('Failed to list users:', error);
+    return res.status(500).json({ error: 'Failed to list users' });
+  }
+});
+
 // Assigns an officer to a department. Reached via the gateway's ADMIN-only
-// /api/auth/users prefix (which the gateway strips), so the path here is
-// /:id/department. Gateway restricts this to ADMIN; the header check below
-// is defense-in-depth for direct service access.
-router.patch('/:id/department', async (req, res) => {
+// /api/auth/users prefix (rewritten to /users). Gateway restricts this to
+// ADMIN; the header check below is defense-in-depth for direct service access.
+router.patch('/users/:id/department', async (req, res) => {
   if (req.header('X-User-Role') !== 'ADMIN') {
     return res.status(403).json({ error: 'Admin access required' });
   }

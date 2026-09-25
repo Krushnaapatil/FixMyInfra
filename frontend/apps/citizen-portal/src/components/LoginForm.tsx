@@ -1,8 +1,17 @@
 import { useState, type FormEvent } from 'react';
-import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
-import { Button } from '@fixmyinfra/ui-kit';
-import { Card } from './StyledCard';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import {
+  AuthBanner,
+  AuthCard,
+  AuthDivider,
+  AuthField,
+  AuthGoogleButton,
+  AuthHeader,
+  AuthInput,
+  AuthPasswordInput,
+  AuthSubmit,
+  AuthTerms
+} from '@fixmyinfra/ui-kit';
 import { login, logout } from '@fixmyinfra/auth';
 
 function getApiError(error: unknown): string {
@@ -12,14 +21,15 @@ function getApiError(error: unknown): string {
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setError('');
+    setNotice('');
     setSubmitting(true);
 
     try {
@@ -37,5 +47,32 @@ export function LoginForm() {
     }
   }
 
-  return <div className="flex w-full max-w-md flex-col justify-center px-5 py-10 sm:px-8"><Card className="!rounded-2xl !border-0 !p-7 !shadow-lg sm:!p-9"><div className="mb-8"><h2 className="text-3xl font-bold tracking-[-0.04em] text-[#0F2A2E]">Welcome Back</h2><p className="mt-2 text-sm text-[#819795]">Login to continue to InfraFix</p></div><form className="space-y-5" onSubmit={handleSubmit}><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Email</span><span className="relative block"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94aaa8]" size={17} /><input name="email" required type="email" autoComplete="email" placeholder="Enter your email" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] py-3.5 pl-11 pr-3 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /></span></label><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Password</span><span className="relative block"><LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94aaa8]" size={17} /><input name="password" required type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Enter your password" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] py-3.5 pl-11 pr-11 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94aaa8]" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label>{error && <div role="alert" className="rounded-xl border border-[#f2c9c9] bg-[#fff5f5] px-4 py-3 text-sm font-medium text-[#b84d4d]">{error}</div>}<Button type="submit" disabled={submitting} className="!w-full !rounded-xl !bg-[#0D7A6E] !py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Signing in...' : 'Log in'}</Button></form><p className="mt-6 text-center text-sm text-[#819795]">Don&apos;t have an account? <Link to="/signup" className="font-bold text-[#0D7A6E]">Sign up</Link></p></Card></div>;
+  return (
+    <AuthCard>
+      <AuthHeader title="Welcome Back" subtitle="Login to continue to InfraFix" />
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <AuthField label="Email">
+          <AuthInput name="email" required type="email" autoComplete="email" placeholder="Enter your Email" icon="mail" />
+        </AuthField>
+        <AuthField label="Password">
+          <AuthPasswordInput name="password" required autoComplete="current-password" placeholder="Enter your Password" />
+        </AuthField>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setNotice('Password reset is not available yet — contact your administrator.')}
+            className="text-xs font-semibold text-[#0D7A6E] hover:underline"
+          >
+            Forget Password?
+          </button>
+        </div>
+        {error && <AuthBanner tone="error">{error}</AuthBanner>}
+        {notice && <AuthBanner tone="info">{notice}</AuthBanner>}
+        <AuthSubmit pending={submitting} pendingLabel="Signing in...">Log In</AuthSubmit>
+      </form>
+      <AuthDivider />
+      <AuthGoogleButton onClick={() => setNotice('Google sign-in is not connected yet — please use email login.')} />
+      <AuthTerms />
+    </AuthCard>
+  );
 }

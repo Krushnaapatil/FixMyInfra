@@ -29,8 +29,8 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return storeAuth(data);
 }
 
-export async function register(name: string, email: string, password: string): Promise<User> {
-  const { data } = await apiClient.post<User>('/auth/register', { name, email, password });
+export async function register(name: string, email: string, password: string, role: Role = 'CITIZEN'): Promise<User> {
+  const { data } = await apiClient.post<User>('/auth/register', { name, email, password, role });
   return data;
 }
 
@@ -56,11 +56,32 @@ export function hasRole(requiredRoles: Role[]): boolean {
 
   try {
     const payload = token.split('.')[1];
-    if (!payload) return false;
+    if (!payload) {
+      logout();
+      return false;
+    }
+
     const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = JSON.parse(atob(normalizedPayload)) as Partial<DecodedToken>;
-    return typeof decoded.role === 'string' && requiredRoles.includes(decoded.role as Role);
+    const paddedPayload = normalizedPayload.padEnd(
+      normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+      '='
+    );
+    const decoded = JSON.parse(atob(paddedPayload)) as Partial<DecodedToken>;
+    const hasValidClaims =
+      typeof decoded.sub === 'string' &&
+      typeof decoded.exp === 'number' &&
+      decoded.exp * 1000 > Date.now() &&
+      typeof decoded.role === 'string' &&
+      requiredRoles.includes(decoded.role as Role);
+
+    if (!hasValidClaims) {
+      logout();
+      return false;
+    }
+
+    return true;
   } catch {
+    logout();
     return false;
   }
 }

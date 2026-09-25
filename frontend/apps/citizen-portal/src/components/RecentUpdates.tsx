@@ -1,6 +1,6 @@
-import { ArrowRight } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Surface } from './Surface';
-import { recentUpdates } from '../data/mock';
 import { ComplaintCard } from './ComplaintCard';
 import type { Complaint } from '@fixmyinfra/types';
 
@@ -9,18 +9,24 @@ interface RecentUpdatesProps {
   complaints?: Complaint[];
 }
 
-export function RecentUpdates({ fullPage = false, complaints }: RecentUpdatesProps) {
-  const items = complaints ?? recentUpdates;
+export function RecentUpdates({ fullPage = false, complaints = [] }: RecentUpdatesProps) {
   return (
-    <Surface className={`${fullPage ? 'mx-auto max-w-3xl !p-2' : '!p-1'} !rounded-2xl`}>
-      <div className="mb-1 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-[#17393b]">Recent Updates</h2>
-          <p className="mt-1 text-xs text-[#8aa09f]">Stay up to date with your reports</p>
+    <Surface className="!rounded-2xl !border-[#e7efec] !p-5 !shadow-sm">
+      <h2 className="text-[15px] font-bold text-[#17393b]">Recent Updates</h2>
+      {complaints.length === 0 ? (
+        <div className="flex flex-col items-center px-4 py-8 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#eaf8f4] text-[#0D7A6E]"><FileText size={19} /></span>
+          <p className="mt-3 text-sm font-semibold text-[#17393b]">No reports yet</p>
+          <p className="mt-1 text-xs text-[#8aa09f]">Your reported issues will appear here.</p>
         </div>
-        {!fullPage && <a href="/complaints" className="flex items-center gap-1 text-xs font-semibold text-[#0D7A6E]">View More <ArrowRight size={14} /></a>}
-      </div>
-      <div>{items.map((complaint) => <ComplaintCard key={complaint.id} complaint={complaint} showArrow={fullPage} />)}</div>
+      ) : (
+        <div className={fullPage ? 'mx-auto max-w-3xl' : ''}>{complaints.map((complaint) => <ComplaintCard key={complaint.id} complaint={complaint} showArrow={fullPage} />)}</div>
+      )}
+      {!fullPage && complaints.length > 0 && (
+        <div className="mt-1 text-right">
+          <Link to="/complaints" className="text-xs font-semibold text-[#0D7A6E] hover:underline">View More</Link>
+        </div>
+      )}
     </Surface>
   );
 }

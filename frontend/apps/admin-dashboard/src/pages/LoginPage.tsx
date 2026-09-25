@@ -1,7 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@fixmyinfra/ui-kit';
+import {
+  AuthBanner,
+  AuthCard,
+  AuthDivider,
+  AuthField,
+  AuthGoogleButton,
+  AuthHeader,
+  AuthInput,
+  AuthLayout,
+  AuthPasswordInput,
+  AuthSubmit,
+  AuthTerms
+} from '@fixmyinfra/ui-kit';
 import { login, logout } from '@fixmyinfra/auth';
+import brandLogo from '../assets/brand-logo.png';
+import cityIllustration from '../assets/city-illustration.png';
+import featureIcons from '../assets/feature-icons.png';
 
 function getApiError(error: unknown): string {
   return (error as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'Login failed. Check your credentials.';
@@ -10,12 +25,14 @@ function getApiError(error: unknown): string {
 export default function LoginPage() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setError('');
+    setNotice('');
     setSubmitting(true);
     try {
       const response = await login(String(form.get('email')), String(form.get('password')));
@@ -32,5 +49,38 @@ export default function LoginPage() {
     }
   }
 
-  return <main className="flex min-h-screen items-center justify-center bg-slate-100 px-5"><form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg"><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">InfraFix administration</p><h1 className="mt-3 text-3xl font-bold text-slate-900">Admin sign in</h1><p className="mt-2 text-sm text-slate-500">Monitor complaints and municipal operations.</p><label className="mt-8 block"><span className="mb-2 block text-sm font-semibold text-slate-700">Email</span><input name="email" required type="email" className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10" /></label><label className="mt-4 block"><span className="mb-2 block text-sm font-semibold text-slate-700">Password</span><input name="password" required type="password" className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10" /></label>{error && <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm font-medium text-red-700">{error}</div>}<Button type="submit" disabled={submitting} className="mt-6 w-full !rounded-lg !bg-slate-900 !py-3 font-bold">{submitting ? 'Signing in...' : 'Open dashboard'}</Button></form></main>;
+  return (
+    <AuthLayout
+      assets={{ brandLogo, cityIllustration, featureIcons }}
+      topHint={<span>Need access? Contact your administrator</span>}
+      mobileAction={<span className="text-xs font-medium text-[#819795]">Admin access only</span>}
+    >
+      <AuthCard>
+        <AuthHeader title="Welcome Back" subtitle="Login to continue to InfraFix Administration" />
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <AuthField label="Email">
+            <AuthInput name="email" required type="email" autoComplete="email" placeholder="Enter your Email" icon="mail" />
+          </AuthField>
+          <AuthField label="Password">
+            <AuthPasswordInput name="password" required autoComplete="current-password" placeholder="Enter your Password" />
+          </AuthField>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setNotice('Password reset is not available yet — contact your administrator.')}
+              className="text-xs font-semibold text-[#0D7A6E] hover:underline"
+            >
+              Forget Password?
+            </button>
+          </div>
+          {error && <AuthBanner tone="error">{error}</AuthBanner>}
+          {notice && <AuthBanner tone="info">{notice}</AuthBanner>}
+          <AuthSubmit pending={submitting} pendingLabel="Signing in...">Log In</AuthSubmit>
+        </form>
+        <AuthDivider />
+        <AuthGoogleButton onClick={() => setNotice('Google sign-in is not connected yet — please use email login.')} />
+        <AuthTerms />
+      </AuthCard>
+    </AuthLayout>
+  );
 }

@@ -1,11 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
-import { AuthDecor } from '../components/AuthDecor';
-import { Brand } from '../components/Brand';
+import { AuthBanner, AuthLayout } from '@fixmyinfra/ui-kit';
 import { LoginForm } from '../components/LoginForm';
+import brandLogo from '../assets/brand-logo.png';
+import cityIllustration from '../assets/city-illustration.png';
+import featureIcons from '../assets/feature-icons.png';
 
 export default function LoginPage() {
   const location = useLocation();
   const message = (location.state as { message?: string } | null)?.message;
 
-  return <main className="flex min-h-screen bg-white"><AuthDecor /><section className="flex min-h-screen flex-1 flex-col items-center justify-center bg-[#f7fafa] md:w-[45%]"><div className="mb-8 self-start px-6 md:hidden"><Link to="/login"><Brand /></Link></div>{message && <div role="status" className="mb-4 w-full max-w-md rounded-xl border border-[#bfe8dd] bg-[#effbf8] px-4 py-3 text-sm font-medium text-[#0D7A6E]">{message}</div>}<LoginForm /></section></main>;
+  return (
+    <AuthLayout
+      assets={{ brandLogo, cityIllustration, featureIcons }}
+      topHint={
+        <>
+          Don&apos;t have an Account?{' '}
+          <Link to="/signup" className="font-semibold text-[#0D7A6E] hover:underline">
+            Sign up
+          </Link>
+        </>
+      }
+      mobileAction={
+        <Link to="/signup" className="text-sm font-semibold text-[#0D7A6E]">
+          Sign up
+        </Link>
+      }
+      notice={message ? <AuthBanner tone="success">{message}</AuthBanner> : undefined}
+    >
+      <LoginForm />
+    </AuthLayout>
+  );
 }

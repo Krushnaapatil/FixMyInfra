@@ -11,7 +11,7 @@ export function TrustScoreRing({ score }: TrustScoreRingProps) {
     <div className="relative mx-auto h-32 w-32" aria-label={`Trust score ${score} out of 100`} role="img">
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
         <circle cx="50" cy="50" r={radius} fill="none" stroke="#e7f1ef" strokeWidth="8" />
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#14B8A6" strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="#2e9e5b" strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <strong className="text-2xl font-bold text-[#0F2A2E]">{score}%</strong>

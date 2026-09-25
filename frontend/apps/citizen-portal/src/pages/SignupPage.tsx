@@ -1,10 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@fixmyinfra/ui-kit';
+import {
+  AuthBanner,
+  AuthCard,
+  AuthField,
+  AuthHeader,
+  AuthInput,
+  AuthLayout,
+  AuthPasswordInput,
+  AuthSubmit,
+  AuthTerms
+} from '@fixmyinfra/ui-kit';
 import { register } from '@fixmyinfra/auth';
-import { AuthDecor } from '../components/AuthDecor';
-import { Brand } from '../components/Brand';
-import { Card } from '../components/StyledCard';
+import brandLogo from '../assets/brand-logo.png';
+import cityIllustration from '../assets/city-illustration.png';
+import featureIcons from '../assets/feature-icons.png';
 
 function getApiError(error: unknown): string {
   const responseError = (error as { response?: { data?: { error?: string } } }).response?.data?.error;
@@ -40,5 +50,43 @@ export default function SignupPage() {
     }
   }
 
-  return <main className="flex min-h-screen bg-white"><AuthDecor /><section className="flex min-h-screen flex-1 flex-col items-center justify-center bg-[#f7fafa] md:w-[45%]"><div className="mb-8 flex w-full items-center justify-between px-6 md:hidden"><Link to="/login"><Brand /></Link><Link to="/login" className="text-sm font-semibold text-[#0D7A6E]">Log in</Link></div><div className="flex w-full max-w-md flex-col justify-center px-5 py-10 sm:px-8"><Card className="!rounded-2xl !border-0 !p-7 !shadow-lg sm:!p-9"><div className="mb-8"><h2 className="text-3xl font-bold tracking-[-0.04em] text-[#0F2A2E]">Create your account</h2><p className="mt-2 text-sm text-[#819795]">Join your neighborhood in making Nashik better.</p></div><form className="space-y-5" onSubmit={handleSubmit}><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Full name</span><input name="name" required type="text" autoComplete="name" placeholder="Enter your full name" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] px-3.5 py-3.5 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /></label><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Email</span><input name="email" required type="email" autoComplete="email" placeholder="Enter your email" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] px-3.5 py-3.5 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /></label><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Password</span><input name="password" required minLength={8} type="password" autoComplete="new-password" placeholder="At least 8 characters" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] px-3.5 py-3.5 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /></label><label className="block"><span className="mb-2 block text-xs font-semibold text-[#315250]">Confirm password</span><input name="confirmPassword" required minLength={8} type="password" autoComplete="new-password" placeholder="Repeat your password" className="w-full rounded-xl border border-[#dce9e6] bg-[#fbfdfd] px-3.5 py-3.5 text-sm text-[#17393b] outline-none transition placeholder:text-[#a9bbba] focus:border-[#0D7A6E] focus:ring-4 focus:ring-[#0D7A6E]/10" /></label>{error && <div role="alert" className="rounded-xl border border-[#f2c9c9] bg-[#fff5f5] px-4 py-3 text-sm font-medium text-[#b84d4d]">{error}</div>}<Button type="submit" disabled={submitting} className="!w-full !rounded-xl !bg-[#0D7A6E] !py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Creating account...' : 'Create account'}</Button></form><p className="mt-6 text-center text-sm text-[#819795]">Already have an account? <Link to="/login" className="font-bold text-[#0D7A6E]">Log in</Link></p></Card></div></section></main>;
+  return (
+    <AuthLayout
+      assets={{ brandLogo, cityIllustration, featureIcons }}
+      topHint={
+        <>
+          Already have an Account?{' '}
+          <Link to="/login" className="font-semibold text-[#0D7A6E] hover:underline">
+            Log in
+          </Link>
+        </>
+      }
+      mobileAction={
+        <Link to="/login" className="text-sm font-semibold text-[#0D7A6E]">
+          Log in
+        </Link>
+      }
+    >
+      <AuthCard>
+        <AuthHeader title="Create Account" subtitle="Sign up to start reporting issues" />
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <AuthField label="Full Name">
+            <AuthInput name="name" required type="text" autoComplete="name" placeholder="Enter your Full Name" icon="user" />
+          </AuthField>
+          <AuthField label="Email">
+            <AuthInput name="email" required type="email" autoComplete="email" placeholder="Enter your Email" icon="mail" />
+          </AuthField>
+          <AuthField label="Password">
+            <AuthPasswordInput name="password" required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" />
+          </AuthField>
+          <AuthField label="Confirm Password">
+            <AuthInput name="confirmPassword" required minLength={8} type="password" autoComplete="new-password" placeholder="Repeat your Password" icon="lock" />
+          </AuthField>
+          {error && <AuthBanner tone="error">{error}</AuthBanner>}
+          <AuthSubmit pending={submitting} pendingLabel="Creating account...">Sign Up</AuthSubmit>
+        </form>
+        <AuthTerms />
+      </AuthCard>
+    </AuthLayout>
+  );
 }

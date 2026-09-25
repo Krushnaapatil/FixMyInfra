@@ -1,26 +1,48 @@
-import { ArrowRight, Camera, CheckCircle2, MapPinned } from 'lucide-react';
-import { Button } from '@fixmyinfra/ui-kit';
-import { Surface } from './Surface';
 import { Link } from 'react-router-dom';
+import { Surface } from './Surface';
+import reportPhone from '../assets/home/report-phone.png';
+import step1 from '../assets/home/step-1.png';
+import step2 from '../assets/home/step-2.png';
+import step3 from '../assets/home/step-3.png';
 
 const steps = [
-  { icon: Camera, label: 'Upload a Photo' },
-  { icon: MapPinned, label: 'Confirm Location' },
-  { icon: CheckCircle2, label: 'Submit' }
+  { icon: step1, label: 'Upload a Photo' },
+  { icon: step2, label: 'Confirm Location' },
+  { icon: step3, label: 'Submit' }
 ];
 
 export function ReportCTA() {
   return (
-    <Surface className="portal-card-cta relative isolate overflow-hidden">
-      <div className="relative z-10 max-w-md">
-        <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#0D7A6E]">Make a difference</span>
-        <h2 className="mt-2 text-2xl font-bold leading-tight tracking-[-0.03em] text-[#0F2A2E]">See an issue? Report it in a few clicks.</h2>
-        <div className="mt-5 flex flex-wrap items-center gap-3 sm:gap-5">
-          {steps.map(({ icon: Icon, label }, index) => <div key={label} className="flex items-center gap-2 text-xs font-medium text-[#52716f]"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#0D7A6E] shadow-sm"><Icon size={15} /></span><span>{label}</span>{index < steps.length - 1 && <ArrowRight size={14} className="ml-0 text-[#9ac8bf]" />}</div>)}
+    <Surface className="!rounded-2xl !border-[#e7efec] !p-6 !shadow-sm sm:!p-7">
+      <div className="flex items-center gap-6">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[22px] font-bold leading-8 tracking-[-0.02em] text-[#0F2A2E] sm:text-2xl">
+            See an issue?<br />Report it in a few clicks.
+          </h2>
+          <p className="mt-2 max-w-sm text-[13px] leading-5 text-[#78908e]">
+            Upload a photo, confirm the location and let us handle the rest
+          </p>
+          <Link
+            to="/"
+            className="mt-4 inline-block rounded-[10px] bg-[#0D7A6E] px-8 py-3 text-sm font-semibold text-white transition hover:bg-[#0b6a5d]"
+          >
+            Report Grievance
+          </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+            {steps.map(({ icon, label }) => (
+              <span key={label} className="flex items-center gap-2 text-xs font-medium text-[#43586c]">
+                <img src={icon} alt="" className="h-4 w-4" />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
-        <Link to="/" className="mt-6 inline-block"><Button className="!rounded-xl !bg-[#0D7A6E] !px-5 !py-3 text-sm font-semibold shadow-sm">Report Grievance <ArrowRight className="ml-2 inline" size={16} /></Button></Link>
+        <img
+          src={reportPhone}
+          alt="Report an issue from your phone"
+          className="hidden w-36 shrink-0 sm:block lg:w-44"
+        />
       </div>
-      <div className="absolute -right-6 bottom-[-32px] hidden h-48 w-52 rotate-[-7deg] rounded-[34px] border-[7px] border-[#0D7A6E]/20 bg-white/80 shadow-xl sm:block" aria-hidden="true"><div className="absolute left-1/2 top-2 h-1.5 w-14 -translate-x-1/2 rounded-full bg-[#b9d9d3]" /><div className="absolute left-5 right-5 top-10 h-14 rounded-xl bg-[#d9f1eb]" /><div className="absolute bottom-5 left-5 h-3 w-24 rounded-full bg-[#b9d9d3]" /><div className="absolute bottom-5 right-5 h-3 w-8 rounded-full bg-[#14B8A6]" /></div>
     </Surface>
   );
 }
